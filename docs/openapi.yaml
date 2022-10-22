@@ -1,0 +1,779 @@
+openapi: 3.0.3
+info:
+  title: Binar Car Management API - OpenAPI 3.0
+  description: |-
+    an API to manage Binar Car Rental Website , assignment for fullstack web development course by binar.
+
+  contact:
+    email: nandipintorahmatfajri@gmai.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+  - url: http://localhost:8000/api/v1
+tags:
+  - name: auth
+    description: Authenticaiton operations
+  - name: user
+    description: Operations about user
+  - name: cars
+    description: Operations about cars
+paths:
+  /register:
+    post:
+      tags:
+        - auth
+      summary: Register new member
+      description: Register account with member role
+      operationId: register
+      security:
+        - {}
+      requestBody:
+        description: Required fields [email,password]
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCred"
+      
+      responses:
+        "201":
+          description: register succes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  message:
+                    type: string
+                    example: user created succesully
+                  data:
+                    $ref : "#/components/schemas/User"
+
+        "409":
+          description: email already used
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: email already used
+
+        "422":
+          description: Unprocessable Entity, check missing fields from requestBody
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingFieldMsg"
+        
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+
+  /login:
+    post:
+      tags:
+        - auth
+      summary: Loging in to an account
+      description: loging in to get aunthentication token
+      operationId: login
+      security:
+        - {}
+      requestBody:
+        description: Required fields [email,password]
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCred"
+      
+      responses:
+        "201":
+          description: login success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: login success
+                  data:
+                    $ref : "#/components/schemas/LoginCred"
+
+        "401":
+          description: email / password is invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: email is invalid
+
+        "422":
+          description: Unprocessable Entity, check missing fields from requestBody
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingFieldMsg"
+        
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+
+  /whoami:
+    get:
+      tags:
+        - user
+      summary: Get current user data
+      description: get current logged in user data based on bearer token
+      operationId: whoAmI
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Get user data successfully
+                  data:
+                    $ref: "#/components/schemas/User"
+
+        "401":
+          description: bearer token invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedMsg"
+        
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+  
+  /users:
+    get:
+      tags:
+        - user
+      summary: Get list of registered users
+      description: return list of all users
+      operationId: getUserList
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Get user data successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 1
+        "401":
+          description: Unauthorized, bearer token invalid or auth level below admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedMsg"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+  
+  /registerAdmin:
+    post:
+      tags:
+        - auth
+      operationId: createAdmin
+      summary: Add new admin
+      description: Add new admin account 
+      requestBody:
+        description: Required fields [email, password]
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCred"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: created admin successfully
+                  data:
+                    $ref: "#/components/schemas/Admin"
+        "401":
+          description: Unauthorized, bearer token invalid or auth level below superadmin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedMsg"
+
+        "409":
+          description: Conflict, email already registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: email already registered
+
+        "422":
+          description: Unprocessable Entity, check missing fields from requestBody
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingFieldMsg"
+
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+  
+  /cars:
+    get:
+      tags:
+        - cars
+      summary: Get list of available cars
+      operationId: getCars
+      description: Return car data list
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Get cars data successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CarResponse"
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 1
+        "401":
+          description: Unauthorized, bearer token invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedMsg"
+
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+
+    post:
+      tags:
+        - cars
+      summary: Add new car
+      operationId: addCar
+      description: Add new car data to database
+      requestBody:
+        description: "Required fields [name, size, rent, img_url]"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - name
+                - size
+                - rent
+                - img_url
+              properties:
+                name:
+                  type: string
+                  example: "Car"
+                size:
+                  type: integer
+                  example: 3
+                rent:
+                  type: integer
+                  example: 50000
+                image_url:
+                  type: string
+                  example: "www"
+      responses:
+        "201":
+          description: car Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: insert car data successfully
+                  data:
+                    $ref: "#/components/schemas/CarRequest"
+        "401":
+          description: Unauthorized, bearer token invalid or auth level below admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedMsg"
+
+        "422":
+          description: Unprocessable Entity, check missing fields from requestBody
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissingFieldMsg"
+
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+
+  /cars/{id}:
+    get:
+      tags:
+        - cars
+      summary: Get car data by ID
+      operationId: getCarData
+      description: "Return car data based on car id "
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: Id of the car that want to be retrieved
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Get car data successfully
+                  data:
+                    $ref: "#/components/schemas/CarResponse"
+        "401":
+          description: Unauthorized, bearer token invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedMsg"
+        "404":
+          description: Not Found, car Id not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Car data not found
+        "422":
+          description: Unprocessable Entity, check parameter format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidParamMsg"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+
+    put:
+      tags:
+        - cars
+      summary: Edit car data by ID
+      operationId: editCarData
+      description: modify car data based on car ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: id of car that want to be edited
+      requestBody:
+        description: "Allowed fields to update: [name, size, rent, img_url]"
+        content:
+          aplication/json:
+            schema:
+              $ref: "#/components/schemas/CarRequest"
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Update car data successfully
+        "401":
+          description: Unauthorized, bearer token invalid or auth level below admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedMsg"
+        "404":
+          description: Not Found, car Id not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Car data not found
+        "422":
+          description: Unprocessable Entity, check parameter format / allowed fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidParamMsg"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+
+    delete:
+      tags:
+        - cars
+      summary: Delete car data by ID
+      operationId: deleteCarData
+      description: Delete car data based on the car ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: car id that want to be deleted
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Delete car data successfully
+        "401":
+          description: Unauthorized, bearer token invalid or auth level below admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedMsg"
+        "404":
+          description: Not Found, car Id not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failed
+                  message:
+                    type: string
+                    example: Car data not found
+        "422":
+          description: Unprocessable Entity, check parameter format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvalidParamMsg"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultErrMsg"
+
+
+  
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DefaultErrMsg:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: Error message
+    UnauthorizedMsg:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: Unauthorized
+    AuthCred:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@gmail.com
+        password:
+          type: string
+          example: mypassword
+    LoginCred:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 4
+        email:
+          type: string
+          format: email
+          example: user@gmail.com
+        role:
+          type: string
+          enum:
+            - member
+            - admin
+            - superadmin
+        token:
+          type: string
+          format: token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiZW1haWwiOiJtZW1iZXJAbWVtYmVyLmNvbSIsImNyZWF0ZWRBdCI6IjIwMjItMTAtMThUMDY6MzA6NTguOTg3WiIsInVwZGF0ZWRBdCI6IjIwMjItMTAtMThUMDY6MzA6NTguOTg3WiIsImlhdCI6MTY2NjA4MzEyOH0.k_SEHG41C-4cX4ruRRLOaLZqDZBNpTmMtYgGGw0XqAA"
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        email:
+          type: string
+          format: email
+          example: user@gmail.com
+        role:
+          type: string
+          enum:
+            - member
+            - admin
+            - superadmin
+          example: member
+    Admin:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 6
+        email:
+          type: string
+          format: email
+          example: admin@gmail.com
+        role:
+          type: string
+          enum:
+            - member
+            - admin
+            - superadmin
+          example: admin
+    CarResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 4
+        name:
+          type: string
+          example: Sample Car
+        size:
+          type: integer
+          example: 4
+        rent:
+          type: integer
+          example: 50000
+        img_url:
+          type: string
+          example: wwww
+        createdBy:
+          type: integer
+          example: 10
+        createdAt:
+          type: string
+          format: timestamp
+          example: "2022-10-18T11:40:19.301Z"
+        updatedBy:
+          type: integer
+          example: 10
+        deletedBy:
+          type: integer
+          example: 10
+        updatedAt:
+          type: string
+          format: timestamp
+          example: "2022-10-18T11:40:19.301Z"
+        deletedAt:
+          type: string
+          format: timestamp
+          example: "2022-10-18T11:40:19.301Z"
+    CarRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Sample Car
+        size:
+          type: integer
+          example: 3
+        rent:
+          type: integer
+          example: 5000
+        img_url:
+          type: integer
+          example: 1
+
+    MissingFieldMsg:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: Missing required fields
+    InvalidParamMsg:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: Invalid parameter
+    
+
+    
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+      xml:
+        name: '##default'
+security:
+  - bearerAuth: []
