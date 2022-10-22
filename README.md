@@ -6,7 +6,7 @@ an API to manage Binar Car Rental Website , assignment for fullstack web develop
 
     npm install
 
-    npm run setup
+    npm run develop
 
 ## Setup Database
 
